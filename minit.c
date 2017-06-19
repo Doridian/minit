@@ -19,6 +19,7 @@ pid_t subproc[MAX_NUMSERVICES];
 struct procinfo {
 	int uid;
 	int gid;
+	int stop_signal;
 	char *cwd;
 	char *command;
 };
@@ -57,7 +58,7 @@ void runproc(const int index, const int slp) {
 }
 
 void signalHandler(int signum) {
-	int i;
+	int i, subproc_sig;
 	shouldRun = 0;
 
 	if (signum == SIGPWR) {
@@ -66,7 +67,11 @@ void signalHandler(int signum) {
 
 	for (i = 0; i < numServices; i++) {
 		if (subproc[i]) {
-			kill(subproc[i], signum);
+			subproc_sig = subproc_info[i].stop_signal;
+			if (!subproc_sig) {
+				subproc_sig = signum;
+			}
+			kill(subproc[i], subproc_sig);
 		}
 	}
 }
@@ -105,24 +110,25 @@ void load() {
 	numServices = 0;
 
 	FILE *fh = fopen(SERVICES_TMP, "r");
-	int uid, gid;
+	int uid, gid, stop_signal;
 	char cwd[4096];
 	char cmd[65536];
 	int srv;
 	while (1) {
-		if (fscanf(fh, "%d %d %4095s %65535[^\n]\n", &uid, &gid, cwd, cmd) == 4) {
+		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &uid, &gid, &stop_signal, cwd, cmd) == 4) {
 			srv = numServices++;
 			if (srv >= MAX_NUMSERVICES) {
 				exit(1);
 			}
-			
+
 			char *realcmd = malloc(strlen(cmd) + 1);
 			char *realcwd = malloc(strlen(cwd) + 1);
 			strcpy(realcmd, cmd);
 			strcpy(realcwd, cwd);
-			
+
 			subproc_info[srv].uid = uid;
 			subproc_info[srv].gid = gid;
+			subproc_infp[srv].stop_signal = stop_signal;
 			subproc_info[srv].command = realcmd;
 			subproc_info[srv].cwd = realcwd;
 		} else if (feof(fh)) {
@@ -159,7 +165,17 @@ int main() {
 	while (shouldRun) {
 		sleep(1);
 	}
+	
+	signal(SIGINT, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGPWR, SIG_IGN);
+	signal(SIGCHLD, SIG_IGN);
+	
+	kill(-1, SIGTERM);
 	shutdown();
+	sleep(1);
+	kill(-1, SIGKILL);
+	
 	return 0;
 }
 
