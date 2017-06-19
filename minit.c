@@ -1,4 +1,4 @@
-#define NUMSERVICES 16
+#define MAX_NUMSERVICES 16
 #define ONBOOT_TMP "/tmp/minit_onboot"
 #define SERVICES_TMP "/tmp/minit_services"
 
@@ -14,7 +14,7 @@ int childExitStatus;
 int shouldRun;
 
 int numServices;
-pid_t subproc[NUMSERVICES];
+pid_t subproc[MAX_NUMSERVICES];
 
 struct procinfo {
 	int uid;
@@ -23,7 +23,7 @@ struct procinfo {
 	char *command;
 };
 
-struct procinfo subproc_info[NUMSERVICES];
+struct procinfo subproc_info[MAX_NUMSERVICES];
 
 void closeall() {
 	freopen("/dev/null", "w", stdout);
@@ -111,11 +111,16 @@ void load() {
 	int srv;
 	while (1) {
 		if (fscanf(fh, "%d %d %4095s %65535[^\n]\n", &uid, &gid, cwd, cmd) == 4) {
+			srv = numServices++;
+			if (srv >= MAX_NUMSERVICES) {
+				exit(1);
+			}
+			
 			char *realcmd = malloc(strlen(cmd) + 1);
 			char *realcwd = malloc(strlen(cwd) + 1);
 			strcpy(realcmd, cmd);
 			strcpy(realcwd, cwd);
-			srv = numServices++;
+			
 			subproc_info[srv].uid = uid;
 			subproc_info[srv].gid = gid;
 			subproc_info[srv].command = realcmd;
