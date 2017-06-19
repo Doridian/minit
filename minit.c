@@ -12,6 +12,7 @@
 
 int childExitStatus;
 int shouldRun;
+pid_t pid;
 
 int numServices;
 pid_t subproc[MAX_NUMSERVICES];
@@ -115,7 +116,7 @@ void load() {
 	char cmd[65536];
 	int srv;
 	while (1) {
-		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 4) {
+		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
 			srv = numServices++;
 			if (srv >= MAX_NUMSERVICES) {
 				exit(1);
@@ -159,23 +160,25 @@ void shutdown() {
 }
 
 int main() {
+	pid = getpid();
+
 	load();
 	closeall();
 	run();
 	while (shouldRun) {
 		sleep(1);
 	}
-	
+
 	signal(SIGINT, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGPWR, SIG_IGN);
 	signal(SIGCHLD, SIG_IGN);
-	
-	kill(-1, SIGTERM);
+
+	kill(-pid, SIGTERM);
 	shutdown();
 	sleep(1);
-	kill(-1, SIGKILL);
-	
+	kill(-pid, SIGKILL);
+
 	return 0;
 }
 
