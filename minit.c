@@ -60,7 +60,9 @@ void runproc(const int index, const int slp) {
 
 void signalHandler(int signum) {
 	int i, subproc_sig;
-	shouldRun = 0;
+	if (shouldRun == 1) {
+		shouldRun = 0;
+	}
 
 	if (signum == SIGPWR) {
 		signum = SIGINT;
@@ -81,7 +83,7 @@ void sigchldHandler(int signum) {
 	int i;
 	pid_t chld;
 	while ((chld = waitpid(-1, &childExitStatus, WNOHANG)) > 0) {
-		if (shouldRun) {
+		if (shouldRun == 1) {
 			// Try to find it
 			for (i = 0; i < numServices; i++) {
 				if (subproc[i] == chld) {
@@ -94,17 +96,22 @@ void sigchldHandler(int signum) {
 	}
 }
 
+void spawnNormalInit(int signum) {
+	
+}
+
 void load() {
 	if (system("/minit/load")) {
 		exit(1);
 	}
 
-	shouldRun = 1;
+	shouldRun = 2;
 	signal(SIGCHLD, sigchldHandler);
 
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	signal(SIGPWR, signalHandler);
+	signal(SIGUSR1, spawnNormalInit);
 
 	system(ONBOOT_TMP);
 
@@ -165,7 +172,7 @@ int main() {
 	load();
 	closeall();
 	run();
-	while (shouldRun) {
+	while (shouldRun == 1) {
 		sleep(1);
 	}
 
@@ -173,10 +180,16 @@ int main() {
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGPWR, SIG_IGN);
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGUSR1, SIG_IGN);
 
 	kill(-pid, SIGTERM);
 	shutdown();
 	sleep(1);
+	
+	if (shouldRun == 2) {
+		execl("/sbin/init", "init", NULL);
+	}
+	
 	kill(-pid, SIGKILL);
 
 	return 0;
