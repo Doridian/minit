@@ -97,7 +97,7 @@ void sigchldHandler(int signum) {
 }
 
 void spawnNormalInit(int signum) {
-	
+	shouldRun = 2;
 }
 
 void load() {
@@ -105,7 +105,7 @@ void load() {
 		exit(1);
 	}
 
-	shouldRun = 2;
+	shouldRun = 1;
 	signal(SIGCHLD, sigchldHandler);
 
 	signal(SIGINT, signalHandler);
