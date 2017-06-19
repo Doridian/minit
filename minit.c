@@ -115,7 +115,7 @@ void load() {
 	char cmd[65536];
 	int srv;
 	while (1) {
-		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &uid, &gid, &stop_signal, cwd, cmd) == 4) {
+		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 4) {
 			srv = numServices++;
 			if (srv >= MAX_NUMSERVICES) {
 				exit(1);
