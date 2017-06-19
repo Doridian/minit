@@ -187,7 +187,7 @@ int main() {
 	sleep(1);
 	
 	if (shouldRun == 2) {
-		execl("/sbin/init", "init", NULL);
+		execl("/sbin/init", "/sbin/init", NULL);
 	}
 	
 	kill(-pid, SIGKILL);
