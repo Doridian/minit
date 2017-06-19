@@ -1,0 +1,3 @@
+/minit
+/hosts/*
+!/hosts/.keep
