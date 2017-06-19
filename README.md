@@ -30,3 +30,13 @@ example
 load is just any executable script (default uses `#!/bin/sh` scripts)
 
 onboot is just any executable script (default uses `#!/bin/sh` scripts)
+
+# Proxmox example
+
+`/etc/pve/lxc/101.conf`
+
+```
+...
+lxc.init_cmd: /minit/minit
+mp0: /mnt/minit,mp=/minit,ro=1
+```
