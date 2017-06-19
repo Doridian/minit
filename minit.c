@@ -128,7 +128,7 @@ void load() {
 
 			subproc_info[srv].uid = uid;
 			subproc_info[srv].gid = gid;
-			subproc_infp[srv].stop_signal = stop_signal;
+			subproc_info[srv].stop_signal = stop_signal;
 			subproc_info[srv].command = realcmd;
 			subproc_info[srv].cwd = realcwd;
 		} else if (feof(fh)) {
