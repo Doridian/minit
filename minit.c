@@ -146,9 +146,11 @@ void load() {
 		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
 			numServices++;
 
-			char *realcmd = mainpage + (cur_offset += (strlen(cmd) + 1));
-			char *realcwd = mainpage + (cur_offset += (strlen(cwd) + 1));
+			char *realcmd = mainpage + cur_offset;
+			cur_offset += strlen(cmd) + 1;
 			strcpy(realcmd, cmd);
+			char *realcwd = mainpage + cur_offset;
+			cur_offset += strlen(cwd) + 1;
 			strcpy(realcwd, cwd);
 
 			subproc_info[numServices].uid = uid;
