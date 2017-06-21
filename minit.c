@@ -115,34 +115,54 @@ void load() {
 
 	system(ONBOOT_TMP);
 
-	numServices = 0;
+	numServices = -1;
 
 	FILE *fh = fopen(SERVICES_TMP, "r");
 	int uid, gid, stop_signal;
 	char cwd[4096];
 	char cmd[65536];
-	int srv;
+	int total_size = 0;
 	while (1) {
 		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
-			srv = numServices++;
-			if (srv >= MAX_NUMSERVICES) {
+			numServices++;
+			if (numServices >= MAX_NUMSERVICES) {
 				exit(1);
 			}
 
-			char *realcmd = malloc(strlen(cmd) + 1);
-			char *realcwd = malloc(strlen(cwd) + 1);
-			strcpy(realcmd, cmd);
-			strcpy(realcwd, cwd);
-
-			subproc_info[srv].uid = uid;
-			subproc_info[srv].gid = gid;
-			subproc_info[srv].stop_signal = stop_signal;
-			subproc_info[srv].command = realcmd;
-			subproc_info[srv].cwd = realcwd;
+			total_size += strlen(cmd) + 1 + strlen(cwd) + 1;
 		} else if (feof(fh)) {
 			break;
 		}
 	}
+
+	rewind(fh);
+
+	numServices = -1;
+
+	char* mainpage = malloc(total_size);
+	int cur_offset = 0;
+
+	while (1) {
+		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
+			numServices++;
+
+			char *realcmd = mainpage + (cur_offset += (strlen(cmd) + 1));
+			char *realcwd = mainpage + (cur_offset += (strlen(cwd) + 1));
+			strcpy(realcmd, cmd);
+			strcpy(realcwd, cwd);
+
+			subproc_info[numServices].uid = uid;
+			subproc_info[numServices].gid = gid;
+			subproc_info[numServices].stop_signal = stop_signal;
+			subproc_info[numServices].command = realcmd;
+			subproc_info[numServices].cwd = realcwd;
+		} else if (feof(fh)) {
+			break;
+		}
+	}
+
+	numServices++;
+
 	fclose(fh);
 
 	unlink(ONBOOT_TMP);
