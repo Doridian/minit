@@ -12,15 +12,12 @@
 
 int childExitStatus;
 int shouldRun;
-pid_t pid;
-
 int numServices;
-pid_t subproc[MAX_NUMSERVICES];
-
 struct procinfo {
 	int uid;
 	int gid;
 	int stop_signal;
+	pid_t pid;
 	char *cwd;
 	char *command;
 };
@@ -34,8 +31,8 @@ void closeall() {
 
 void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
-	subproc[index] = vfork();
-	if (subproc[index] == 0) {
+	pid_t fpid = vfork();
+	if (fpid == 0) {
 		chdir(info.cwd);
 		if (info.gid) {
 			if (setregid(info.gid, info.gid)) {
@@ -53,9 +50,10 @@ void runproc(const int index, const int slp) {
 		}
 		execl("/bin/sh", "sh", "-c", info.command, NULL);
 		_exit(1);
-	} else if (subproc[index] < 0) {
+	} else if (fpid < 0) {
 		exit(1);
 	}
+	info.pid = fpid;
 }
 
 void signalHandler(int signum) {
@@ -69,12 +67,12 @@ void signalHandler(int signum) {
 	}
 
 	for (i = 0; i < numServices; i++) {
-		if (subproc[i]) {
+		if (subproc_info[i].pid) {
 			subproc_sig = subproc_info[i].stop_signal;
 			if (!subproc_sig) {
 				subproc_sig = signum;
 			}
-			kill(subproc[i], subproc_sig);
+			kill(subproc_info[i].pid, subproc_sig);
 		}
 	}
 }
@@ -86,7 +84,7 @@ void sigchldHandler(int signum) {
 		if (shouldRun == 1) {
 			// Try to find it
 			for (i = 0; i < numServices; i++) {
-				if (subproc[i] == chld) {
+				if (subproc_info[i].pid == chld) {
 					runproc(i, 1);
 					break;
 				}
@@ -182,15 +180,13 @@ void run() {
 void shutdown() {
 	int srv;
 	for (srv = 0; srv < numServices; srv++) {
-		if (subproc[srv]) {
-			waitpid(subproc[srv], &childExitStatus, 0);
+		if (subproc_info[srv].pid) {
+			waitpid(subproc_info[srv].pid, &childExitStatus, 0);
 		}
 	}
 }
 
 int main() {
-	pid = getpid();
-
 	load();
 	closeall();
 	run();
@@ -204,7 +200,7 @@ int main() {
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGUSR1, SIG_IGN);
 
-	kill(-pid, SIGTERM);
+	kill(-getpid(), SIGTERM);
 	shutdown();
 	sleep(1);
 	
@@ -212,7 +208,7 @@ int main() {
 		execl("/sbin/init", "/sbin/init", NULL);
 	}
 	
-	kill(-pid, SIGKILL);
+	kill(-getpid(), SIGKILL);
 
 	return 0;
 }
