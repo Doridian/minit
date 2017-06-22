@@ -53,7 +53,7 @@ void runproc(const int index, const int slp) {
 	} else if (fpid < 0) {
 		exit(1);
 	}
-	info.pid = fpid;
+	subproc_info[index].pid = fpid;
 }
 
 void signalHandler(int signum) {
