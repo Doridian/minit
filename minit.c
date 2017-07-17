@@ -1,7 +1,4 @@
 #define MAX_NUMSERVICES 16
-#define ONBOOT_TMP "/tmp/minit_onboot"
-#define SERVICES_TMP "/tmp/minit_services"
-
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -93,10 +90,6 @@ void spawnNormalInit(int signum) {
 }
 
 void load() {
-	if (system("/minit/load")) {
-		exit(1);
-	}
-
 	shouldRun = 1;
 	signal(SIGCHLD, sigchldHandler);
 
@@ -105,11 +98,11 @@ void load() {
 	signal(SIGPWR, signalHandler);
 	signal(SIGUSR1, spawnNormalInit);
 
-	system(ONBOOT_TMP);
+	system("/minit/onboot");
 
 	numServices = -1;
 
-	FILE *fh = fopen(SERVICES_TMP, "r");
+	FILE *fh = fopen("/minit/services", "r");
 	int uid, gid, stop_signal;
 	char cwd[4096];
 	char cmd[65536];
