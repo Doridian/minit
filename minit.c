@@ -24,11 +24,6 @@ struct procinfo {
 
 struct procinfo subproc_info[MAX_NUMSERVICES];
 
-void closeall() {
-	freopen("/dev/null", "w", stdout);
-	freopen("/dev/null", "w", stderr);
-}
-
 void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
 	pid_t fpid = vfork();
@@ -44,7 +39,6 @@ void runproc(const int index, const int slp) {
 				exit(1);
 			}
 		}
-		closeall();
 		if (slp > 0) {
 			sleep(slp);
 		}
@@ -188,7 +182,6 @@ void shutdown() {
 
 int main() {
 	load();
-	closeall();
 	run();
 	while (shouldRun == 1) {
 		sleep(1);
