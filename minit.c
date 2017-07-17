@@ -151,9 +151,6 @@ void load() {
 	numServices++;
 
 	fclose(fh);
-
-	unlink(ONBOOT_TMP);
-	unlink(SERVICES_TMP);
 }
 
 void run() {
