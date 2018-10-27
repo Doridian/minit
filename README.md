@@ -20,11 +20,11 @@ Default behaviour of /minit/load is to copy from /minit/hosts/FQDN/services (and
 
 services
 ```
-UID GID CWD COMMAND...
+STOP_SIGNAL UID GID CWD COMMAND...
 ```
 example
 ```
-0 0 / /usr/sbin/nginx -c /etc/nginx.conf
+0 0 0 / /usr/sbin/nginx -c /etc/nginx.conf
 ```
 
 load is just any executable script (default uses `#!/bin/sh` scripts)
