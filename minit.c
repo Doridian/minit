@@ -133,6 +133,7 @@ void load() {
 	readcheck(fh, subproc_info, subproc_size);
 
 	for (int i = 0; i < numServices; i++) {
+		subproc_info[i].pid = 0;
 		subproc_info[i].command = subproc_info[i].command_rel + mainpage;
 		subproc_info[i].cwd = subproc_info[i].cwd_rel + mainpage;
 	}
