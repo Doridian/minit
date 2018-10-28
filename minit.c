@@ -11,6 +11,7 @@
 
 static int childExitStatus;
 static int shouldRun;
+static char* mainpage;
 
 static inline void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
@@ -35,7 +36,9 @@ static inline void runproc(const int index, const int slp) {
 		execl("/bin/sh", "sh", "-c", info.command, NULL);
 		_exit(1);
 	} else if (fpid < 0) {
-		exit(5);
+		shouldRun = 0;
+		subproc_info[index].pid = 0;
+		return;
 	}
 	subproc_info[index].pid = fpid;
 }
@@ -127,7 +130,7 @@ static inline void load() {
 	readcheck(fh, &numServices, sizeof(numServices));
 	int subproc_size = sizeof(procinfo) * numServices;
 
-	char* mainpage = malloc(strings_size + subproc_size);
+	mainpage = malloc(strings_size + subproc_size);
 	readcheck(fh, mainpage, strings_size);
 
 	subproc_info = (void*)mainpage + strings_size;
@@ -177,6 +180,8 @@ int main() {
 	kill(-getpid(), SIGTERM);
 	shutdown();
 	sleep(1);
+
+	free(mainpage);
 	
 	if (shouldRun == 2) {
 		execl("/sbin/init", "/sbin/init", NULL);
