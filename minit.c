@@ -128,7 +128,9 @@ void load() {
 	readcheck(fh, mainpage, total_size);
 
 	readcheck(fh, &numServices, sizeof(numServices));
-	readcheck(fh, &subproc_info, sizeof(struct procinfo) * numServices);
+	int subproc_size = sizeof(procinfo) * numServices;
+	subproc_info = malloc(subproc_size);
+	readcheck(fh, subproc_info, subproc_size);
 
 	for (int i = 0; i < numServices; i++) {
 		subproc_info[i].command = subproc_info[i].command_rel + mainpage;

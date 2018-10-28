@@ -1,6 +1,5 @@
 #pragma once
 
-#define MAX_NUMSERVICES 16
 #define TOTAL_SIZE_T int
 
 #define SERVICES_TEXT "/minit/services"
@@ -9,7 +8,7 @@
 
 int numServices;
 
-struct procinfo {
+typedef struct procinfo {
 	int uid;
 	int gid;
 	int stop_signal;
@@ -22,7 +21,7 @@ struct procinfo {
 		char *command;
 		int command_rel;
 	};
-};
+} procinfo;
 
-struct procinfo subproc_info[MAX_NUMSERVICES];
+procinfo *subproc_info;
 

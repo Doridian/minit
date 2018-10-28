@@ -13,7 +13,7 @@
 #include <grp.h>
 
 #define ifscan(FH) if (fscanf(FH, "%1023s %1023s %1023s %4095s %65535[^\n]\n", stop_signal_str, uid_str, gid_str, cwd, cmd) == 5)
-#define bufwrite(data) { int tmplen = strlen(data) + 1; memcpy(buffer + bufferpos, data, tmplen); bufferpos += tmplen; }
+#define writecheck(fd, data, len) { if (write(fd, data, len) < len) { fprintf(stderr, "Cannot write stdout\n"); return 1; } }
 
 int isnumber(const char *str, int allowspace) {
 	do {
@@ -89,9 +89,9 @@ int addstring(const char *str) {
 int main() {
 	FILE *src = fopen(SERVICES_TEXT, "r");
 	if (!src) {
+		fprintf(stderr, "Cannot open " SERVICES_TEXT "\n");
 		return 1;
 	}
-	FILE *dst = stdout;
 
 	char uid_str[1024];
 	char gid_str[1024];
@@ -107,18 +107,19 @@ int main() {
 	while (1) {
 		ifscan(src) {
 			numServices++;
-			if (numServices >= MAX_NUMSERVICES) {
-				printf("Out of service space, max %d\n", MAX_NUMSERVICES);
-				exit(1);
-			}
-
 			buffer_size += strlen(cmd) + 1 + strlen(cwd) + 1;
 		} else if (feof(src)) {
 			break;
 		}
 	}
 
+	if (numServices <= 0) {
+		fprintf(stderr, "No services defined\n");
+		return 1;
+	}
+
 	buffer = malloc(buffer_size);
+	subproc_info = malloc(sizeof(procinfo) * numServices);
 
 	numServices = 0;
 	rewind(src);
@@ -144,7 +145,7 @@ int main() {
 				if (stop_signal < 0) {
 					stop_signal = getsignum(stop_signal_str, 1);
 					if (stop_signal < 0) {
-						printf("Don't know how to convert %s to signal, using default\n", stop_signal_str);
+						fprintf(stderr, "Don't know how to convert %s to signal, using default\n", stop_signal_str);
 						stop_signal = 0;
 					}
 				}
@@ -162,16 +163,12 @@ int main() {
 		}
 	}
 
-
-	buffer_size = buffer_pos;
-
-	fwrite(&buffer_size, sizeof(buffer_size), 1, dst);
-	fwrite(buffer, buffer_size, 1, dst);
-	fwrite(&numServices, sizeof(numServices), 1, dst);
-	fwrite(&subproc_info, sizeof(struct procinfo), numServices, dst);
+	writecheck(1, &buffer_pos, sizeof(buffer_pos));
+	writecheck(1, buffer, buffer_pos);
+	writecheck(1, &numServices, sizeof(numServices));
+	writecheck(1, subproc_info, sizeof(procinfo) * numServices);
 
 	fclose(src);
-	fclose(dst);
 
 	free(buffer);
 
