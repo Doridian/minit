@@ -138,8 +138,6 @@ void load() {
 	close(fh);
 
 	printf("Loaded %d services\n", numServices);
-
-	exit(99);
 }
 
 void run() {
