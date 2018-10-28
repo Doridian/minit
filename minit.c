@@ -1,31 +1,24 @@
-#define MAX_NUMSERVICES 16
+#include "config.h"
+
 #include <sys/wait.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <string.h>
 
+#define readcheck(fh, dst, size) { if(read(fh, dst, size) < size) { exit(7); } }
+
 int childExitStatus;
 int shouldRun;
-int numServices;
-struct procinfo {
-	int uid;
-	int gid;
-	int stop_signal;
-	pid_t pid;
-	char *cwd;
-	char *command;
-};
-
-struct procinfo subproc_info[MAX_NUMSERVICES];
 
 void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
 	pid_t fpid = vfork();
 	if (fpid == 0) {
-		chdir(info.cwd);
+		if (chdir(info.cwd)) {
+			exit(1);
+		}
 		if (info.gid) {
 			if (setregid(info.gid, info.gid)) {
 				exit(1);
@@ -42,7 +35,7 @@ void runproc(const int index, const int slp) {
 		execl("/bin/sh", "sh", "-c", info.command, NULL);
 		_exit(1);
 	} else if (fpid < 0) {
-		exit(1);
+		exit(5);
 	}
 	subproc_info[index].pid = fpid;
 }
@@ -98,59 +91,55 @@ void load() {
 	signal(SIGPWR, signalHandler);
 	signal(SIGUSR1, spawnNormalInit);
 
-	system("/minit/onboot");
-
-	numServices = -1;
-
-	FILE *fh = fopen("/minit/services", "r");
-	int uid, gid, stop_signal;
-	char cwd[4096];
-	char cmd[65536];
-	int total_size = 0;
-	while (1) {
-		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
-			numServices++;
-			if (numServices >= MAX_NUMSERVICES) {
-				exit(1);
-			}
-
-			total_size += strlen(cmd) + 1 + strlen(cwd) + 1;
-		} else if (feof(fh)) {
-			break;
-		}
+	int pipefd[2];
+	if (pipe(pipefd)) {
+		exit(7);
 	}
 
-	rewind(fh);
+	pid_t subpid = vfork();
+	if (subpid < 0) {
+		exit(8);
+	} else if (subpid == 0) {
+		close(pipefd[0]);
+		close(1);
+		dup2(pipefd[1], 1);
+		execl("/minit/parser", "parser", NULL);
+		_exit(1);
+	}
+
+	int status;
+	close(pipefd[1]);
+	waitpid(subpid, &status, 0);
+	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
+		exit(6);
+	}
+
+	if (system("/minit/onboot")) {
+		printf("onboot failed, ignoring...\n");
+	}
+
+	int fh = pipefd[0];
 
 	numServices = -1;
 
+	TOTAL_SIZE_T total_size = 0;
+	readcheck(fh, &total_size, sizeof(total_size));
 	char* mainpage = malloc(total_size);
-	int cur_offset = 0;
+	readcheck(fh, mainpage, total_size);
 
-	while (1) {
-		if (fscanf(fh, "%d %d %d %4095s %65535[^\n]\n", &stop_signal, &uid, &gid, cwd, cmd) == 5) {
-			numServices++;
+	readcheck(fh, &numServices, sizeof(numServices));
+	readcheck(fh, &subproc_info, sizeof(struct procinfo) * numServices);
 
-			char *realcmd = mainpage + cur_offset;
-			cur_offset += strlen(cmd) + 1;
-			strcpy(realcmd, cmd);
-			char *realcwd = mainpage + cur_offset;
-			cur_offset += strlen(cwd) + 1;
-			strcpy(realcwd, cwd);
-
-			subproc_info[numServices].uid = uid;
-			subproc_info[numServices].gid = gid;
-			subproc_info[numServices].stop_signal = stop_signal;
-			subproc_info[numServices].command = realcmd;
-			subproc_info[numServices].cwd = realcwd;
-		} else if (feof(fh)) {
-			break;
-		}
+	for (int i = 0; i < numServices; i++) {
+		subproc_info[i].command = subproc_info[i].command_rel + mainpage;
+		subproc_info[i].cwd = subproc_info[i].cwd_rel + mainpage;
 	}
 
-	numServices++;
+	close(fh);
 
-	fclose(fh);
+	printf("Loaded %d services\n", numServices);
+
+	exit(99);
 }
 
 void run() {

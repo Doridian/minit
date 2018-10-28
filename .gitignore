@@ -1,3 +1,4 @@
 /minit
-/hosts/*
-!/hosts/.keep
+/parser
+/services
+

@@ -1,4 +1,0 @@
-#!/bin/sh
-HN="$(hostname --long)"
-cp "/minit/hosts/$HN/onboot" "/tmp/minit_onboot" || cp "/minit/onboot" "/tmp/minit_onboot"
-cp "/minit/hosts/$HN/services" "/tmp/minit_services" || cp "/minit_services" "/tmp/minit_services"
