@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "config.h"
 
 #include <sys/wait.h>
@@ -66,6 +68,24 @@ int getsignum(const char *str, int mode) {
 	_exit(1);
 }
 
+char *buffer;
+TOTAL_SIZE_T buffer_size;
+int buffer_pos = 0;
+
+int addstring(const char *str) {
+	int tmplen = strlen(str) + 1;
+
+	char *bufptr = memmem(buffer, buffer_size, str, tmplen);
+	if (bufptr) {
+		return (int)(bufptr - buffer);
+	}
+
+	int ret = buffer_pos;
+	memcpy(buffer + buffer_pos, str, tmplen);
+	buffer_pos += tmplen;
+	return ret;
+}
+
 int main() {
 	FILE *src = fopen(SERVICES_TEXT, "r");
 	if (!src) {
@@ -84,8 +104,6 @@ int main() {
 	struct passwd *upasswd;
 	struct group *gpasswd;
 
-	TOTAL_SIZE_T total_size = 0;
-
 	while (1) {
 		ifscan(src) {
 			numServices++;
@@ -94,14 +112,13 @@ int main() {
 				exit(1);
 			}
 
-			total_size += strlen(cmd) + 1 + strlen(cwd) + 1;
+			buffer_size += strlen(cmd) + 1 + strlen(cwd) + 1;
 		} else if (feof(src)) {
 			break;
 		}
 	}
 
-	char *buffer = malloc(total_size);
-	int bufferpos = 0;
+	buffer = malloc(buffer_size);
 
 	numServices = 0;
 	rewind(src);
@@ -133,28 +150,30 @@ int main() {
 				}
 			}
 
-			subproc_info[numServices].cwd_rel = bufferpos;
-			bufwrite(cwd);
-			subproc_info[numServices].command_rel = bufferpos;
-			bufwrite(cmd);
+			subproc_info[numServices].cwd_rel = addstring(cwd);
+			subproc_info[numServices].command_rel = addstring(cmd);
 
 			subproc_info[numServices].stop_signal = stop_signal;
 			subproc_info[numServices].uid = uid;
 			subproc_info[numServices].gid = gid;
-
 			numServices++;
 		} else if (feof(src)) {
 			break;
 		}
 	}
 
-	fwrite(&total_size, sizeof(total_size), 1, dst);
-	fwrite(buffer, total_size, 1, dst);
+
+	buffer_size = buffer_pos;
+
+	fwrite(&buffer_size, sizeof(buffer_size), 1, dst);
+	fwrite(buffer, buffer_size, 1, dst);
 	fwrite(&numServices, sizeof(numServices), 1, dst);
 	fwrite(&subproc_info, sizeof(struct procinfo), numServices, dst);
 
 	fclose(src);
 	fclose(dst);
+
+	free(buffer);
 
 	return 0;
 }
