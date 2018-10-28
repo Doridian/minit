@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <string.h>
 
-#define readcheck(fh, dst, size) { if(read(fh, dst, size) < size) { exit(7); } }
+#define readcheck(fh, dst, size) { if(read(fh, dst, size) < size) { exit(9); } }
 
 static int childExitStatus;
 static int shouldRun;
@@ -114,11 +114,7 @@ static inline void load() {
 	close(pipefd[1]);
 	waitpid(subpid, &status, 0);
 	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
-		exit(6);
-	}
-
-	if (system("/minit/onboot")) {
-		printf("onboot failed, ignoring...\n");
+		exit(10 + WEXITSTATUS(status));
 	}
 
 	int fh = pipefd[0];
@@ -142,13 +138,16 @@ static inline void load() {
 	close(fh);
 
 	printf("Loaded %d services\n", services_count);
+
+	if (system("/minit/onboot")) {
+		printf("onboot failed, ignoring...\n");
+	}
 }
 
 static inline void run() {
 	int srv;
 	for (srv = 0; srv < services_count; srv++) {
 		runproc(srv, 0);
-		sleep(1);
 	}
 }
 

@@ -70,7 +70,7 @@ int getsignum(const char *str, int mode) {
 
 char *buffer;
 size_t buffer_size;
-int buffer_pos = 0;
+size_t buffer_pos = 0;
 
 int addstring(const char *str) {
 	int tmplen = strlen(str) + 1;
@@ -130,13 +130,23 @@ int main() {
 				uid = atoi(uid_str);
 			} else {
 				upasswd = getpwnam(uid_str);
-				uid = upasswd->pw_uid;
+				if (!upasswd) {
+					fprintf(stderr, "Don't know user %s, using UID 0\n", uid_str);
+					uid = 0;
+				} else {
+					uid = upasswd->pw_uid;
+				}
 			}
 			if (isnumber(gid_str, 0)) {
 				gid = atoi(gid_str);
 			} else {
 				gpasswd = getgrnam(gid_str);
-				gid = gpasswd->gr_gid;
+				if (!gpasswd) {
+					fprintf(stderr, "Don't know group %s, using GID 0\n", gid_str);
+					gid = 0;
+				} else {
+					gid = gpasswd->gr_gid;
+				}
 			}
 			if (isnumber(stop_signal_str, 0)) {
 				stop_signal = atoi(stop_signal_str);
