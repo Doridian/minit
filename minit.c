@@ -11,7 +11,7 @@
 
 static int childExitStatus;
 static int shouldRun;
-static char* mainpage;
+static char* mainpage = NULL;
 
 static inline void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
@@ -179,7 +179,10 @@ int main() {
 	shutdown();
 	sleep(1);
 
-	free(mainpage);
+	if (mainpage) {
+		free(mainpage);
+		mainpage = NULL;
+	}
 	
 	if (shouldRun == 2) {
 		execl("/sbin/init", "/sbin/init", NULL);
