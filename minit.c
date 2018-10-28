@@ -122,14 +122,15 @@ static inline void load() {
 
 	numServices = -1;
 
-	TOTAL_SIZE_T total_size = 0;
-	readcheck(fh, &total_size, sizeof(total_size));
-	char* mainpage = malloc(total_size);
-	readcheck(fh, mainpage, total_size);
-
+	TOTAL_SIZE_T strings_size = 0;
+	readcheck(fh, &strings_size, sizeof(strings_size));
 	readcheck(fh, &numServices, sizeof(numServices));
 	int subproc_size = sizeof(procinfo) * numServices;
-	subproc_info = malloc(subproc_size);
+
+	char* mainpage = malloc(strings_size + subproc_size);
+	readcheck(fh, mainpage, strings_size);
+
+	subproc_info = (void*)mainpage + strings_size;
 	readcheck(fh, subproc_info, subproc_size);
 
 	for (int i = 0; i < numServices; i++) {

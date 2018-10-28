@@ -164,8 +164,8 @@ int main() {
 	}
 
 	writecheck(1, &buffer_pos, sizeof(buffer_pos));
-	writecheck(1, buffer, buffer_pos);
 	writecheck(1, &numServices, sizeof(numServices));
+	writecheck(1, buffer, buffer_pos);
 	writecheck(1, subproc_info, sizeof(procinfo) * numServices);
 
 	fclose(src);
