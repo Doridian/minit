@@ -8,7 +8,7 @@
 
 int numServices;
 
-typedef struct procinfo {
+typedef struct __attribute__((__packed__)) procinfo {
 	int uid;
 	int gid;
 	int stop_signal;

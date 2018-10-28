@@ -9,10 +9,10 @@
 
 #define readcheck(fh, dst, size) { if(read(fh, dst, size) < size) { exit(7); } }
 
-int childExitStatus;
-int shouldRun;
+static int childExitStatus;
+static int shouldRun;
 
-void runproc(const int index, const int slp) {
+static inline void runproc(const int index, const int slp) {
 	struct procinfo info = subproc_info[index];
 	pid_t fpid = vfork();
 	if (fpid == 0) {
@@ -82,7 +82,7 @@ void spawnNormalInit(int signum) {
 	shouldRun = 2;
 }
 
-void load() {
+static inline void load() {
 	shouldRun = 1;
 	signal(SIGCHLD, sigchldHandler);
 
@@ -143,7 +143,7 @@ void load() {
 	printf("Loaded %d services\n", numServices);
 }
 
-void run() {
+static inline void run() {
 	int srv;
 	for (srv = 0; srv < numServices; srv++) {
 		runproc(srv, 0);
@@ -151,7 +151,7 @@ void run() {
 	}
 }
 
-void shutdown() {
+static inline void shutdown() {
 	int srv;
 	for (srv = 0; srv < numServices; srv++) {
 		if (subproc_info[srv].pid) {
