@@ -123,9 +123,7 @@ static inline void load() {
 
 	int fh = pipefd[0];
 
-	numServices = -1;
-
-	TOTAL_SIZE_T strings_size = 0;
+	TOTAL_SIZE_T strings_size;
 	readcheck(fh, &strings_size, sizeof(strings_size));
 	readcheck(fh, &numServices, sizeof(numServices));
 	int subproc_size = sizeof(procinfo) * numServices;
