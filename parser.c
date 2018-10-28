@@ -69,7 +69,7 @@ int getsignum(const char *str, int mode) {
 }
 
 char *buffer;
-TOTAL_SIZE_T buffer_size;
+size_t buffer_size;
 int buffer_pos = 0;
 
 int addstring(const char *str) {
@@ -106,22 +106,22 @@ int main() {
 
 	while (1) {
 		ifscan(src) {
-			numServices++;
+			services_count++;
 			buffer_size += strlen(cmd) + 1 + strlen(cwd) + 1;
 		} else if (feof(src)) {
 			break;
 		}
 	}
 
-	if (numServices <= 0) {
+	if (services_count <= 0) {
 		fprintf(stderr, "No services defined\n");
 		return 1;
 	}
 
 	buffer = malloc(buffer_size);
-	subproc_info = malloc(sizeof(procinfo) * numServices);
+	subproc_info = malloc(sizeof(procinfo) * services_count);
 
-	numServices = 0;
+	services_count = 0;
 	rewind(src);
 
 	while (1) {
@@ -151,22 +151,22 @@ int main() {
 				}
 			}
 
-			subproc_info[numServices].cwd_rel = addstring(cwd);
-			subproc_info[numServices].command_rel = addstring(cmd);
+			subproc_info[services_count].cwd_rel = addstring(cwd);
+			subproc_info[services_count].command_rel = addstring(cmd);
 
-			subproc_info[numServices].stop_signal = stop_signal;
-			subproc_info[numServices].uid = uid;
-			subproc_info[numServices].gid = gid;
-			numServices++;
+			subproc_info[services_count].stop_signal = stop_signal;
+			subproc_info[services_count].uid = uid;
+			subproc_info[services_count].gid = gid;
+			services_count++;
 		} else if (feof(src)) {
 			break;
 		}
 	}
 
 	writecheck(1, &buffer_pos, sizeof(buffer_pos));
-	writecheck(1, &numServices, sizeof(numServices));
+	writecheck(1, &services_count, sizeof(services_count));
 	writecheck(1, buffer, buffer_pos);
-	writecheck(1, subproc_info, sizeof(procinfo) * numServices);
+	writecheck(1, subproc_info, sizeof(procinfo) * services_count);
 
 	fclose(src);
 

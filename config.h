@@ -1,12 +1,10 @@
 #pragma once
 
-#define TOTAL_SIZE_T int
-
 #define SERVICES_TEXT "/minit/services"
 
 #include <sys/types.h>
 
-int numServices;
+int services_count;
 
 typedef struct __attribute__((__packed__)) procinfo {
 	int uid;

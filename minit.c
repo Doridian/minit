@@ -53,7 +53,7 @@ void signalHandler(int signum) {
 		signum = SIGINT;
 	}
 
-	for (i = 0; i < numServices; i++) {
+	for (i = 0; i < services_count; i++) {
 		if (subproc_info[i].pid) {
 			subproc_sig = subproc_info[i].stop_signal;
 			if (!subproc_sig) {
@@ -70,7 +70,7 @@ void sigchldHandler(int signum) {
 	while ((chld = waitpid(-1, &childExitStatus, WNOHANG)) > 0) {
 		if (shouldRun == 1) {
 			// Try to find it
-			for (i = 0; i < numServices; i++) {
+			for (i = 0; i < services_count; i++) {
 				if (subproc_info[i].pid == chld) {
 					runproc(i, 1);
 					break;
@@ -123,17 +123,17 @@ static inline void load() {
 
 	int fh = pipefd[0];
 
-	TOTAL_SIZE_T strings_size;
+	size_t strings_size;
 	readcheck(fh, &strings_size, sizeof(strings_size));
-	readcheck(fh, &numServices, sizeof(numServices));
-	int subproc_size = sizeof(procinfo) * numServices;
+	readcheck(fh, &services_count, sizeof(services_count));
+	int subproc_size = sizeof(procinfo) * services_count;
 
 	mainpage = malloc(strings_size + subproc_size);
 	readcheck(fh, mainpage, strings_size + subproc_size);
 
 	subproc_info = (void*)mainpage + strings_size;
 
-	for (int i = 0; i < numServices; i++) {
+	for (int i = 0; i < services_count; i++) {
 		subproc_info[i].pid = 0;
 		subproc_info[i].command = subproc_info[i].command_rel + mainpage;
 		subproc_info[i].cwd = subproc_info[i].cwd_rel + mainpage;
@@ -141,12 +141,12 @@ static inline void load() {
 
 	close(fh);
 
-	printf("Loaded %d services\n", numServices);
+	printf("Loaded %d services\n", services_count);
 }
 
 static inline void run() {
 	int srv;
-	for (srv = 0; srv < numServices; srv++) {
+	for (srv = 0; srv < services_count; srv++) {
 		runproc(srv, 0);
 		sleep(1);
 	}
@@ -154,7 +154,7 @@ static inline void run() {
 
 static inline void shutdown() {
 	int srv;
-	for (srv = 0; srv < numServices; srv++) {
+	for (srv = 0; srv < services_count; srv++) {
 		if (subproc_info[srv].pid) {
 			waitpid(subproc_info[srv].pid, &childExitStatus, 0);
 		}
