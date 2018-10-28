@@ -129,10 +129,9 @@ static inline void load() {
 	int subproc_size = sizeof(procinfo) * numServices;
 
 	mainpage = malloc(strings_size + subproc_size);
-	readcheck(fh, mainpage, strings_size);
+	readcheck(fh, mainpage, strings_size + subproc_size);
 
 	subproc_info = (void*)mainpage + strings_size;
-	readcheck(fh, subproc_info, subproc_size);
 
 	for (int i = 0; i < numServices; i++) {
 		subproc_info[i].pid = 0;
