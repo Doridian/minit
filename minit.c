@@ -49,8 +49,8 @@ void signalHandler(int signum) {
 		shouldRun = 0;
 	}
 
-	if (signum == SIGPWR) {
-		signum = SIGINT;
+	if (signum == SIGPWR || signum == SIGUSR1 || signum == SIGUSR2) {
+		signum = SIGTERM;
 	}
 
 	for (i = 0; i < services_count; i++) {
@@ -92,6 +92,8 @@ static inline void load() {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	signal(SIGPWR, signalHandler);
+	signal(SIGUSR2, signalHandler);
+
 	signal(SIGUSR1, spawnNormalInit);
 
 	int pipefd[2];
@@ -169,10 +171,15 @@ int main() {
 	}
 
 	signal(SIGINT, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
+
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGPWR, SIG_IGN);
+
 	signal(SIGCHLD, SIG_IGN);
+
 	signal(SIGUSR1, SIG_IGN);
+	signal(SIGUSR2, SIG_IGN);
 
 	kill(-getpid(), SIGTERM);
 	shutdown();
