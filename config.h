@@ -1,6 +1,14 @@
 #pragma once
 
-#define SERVICES_TEXT "/minit/services"
+#define SERVICES_FILE "/etc/minit/services"
+#define ONBOOT_FILE "/etc/minit/onboot"
+
+#define MAIN_BINARY "/sbin/minit"
+#define PARSER_BINARY "/sbin/minit_parser"
+
+#define REAL_INIT_BINARY "/sbin/init"
+#define SH_BINARY "/bin/sh"
+#define KILL_BINARY "/bin/kill"
 
 #include <sys/types.h>
 

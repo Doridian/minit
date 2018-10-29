@@ -8,11 +8,12 @@ Runs process specified in CWD specified with UID and GID specified. Keeps restar
 
 # Operation
 
-On startup, runs `/minit/onboot` (customizable executable, can be a shell script or anything else executable, errors are ignored) and `/minit/parser` (not customizable, comes with minit) which parses `/minit/services` to a binary format.
+On startup, runs `/etc/minit/onboot` (customizable executable, can be a shell script or anything else executable, errors are ignored) and `/sbin/minit_parser` (not customizable, comes with minit) which parses `/etc/minit/services` to a binary format.
 
 # Configuration
 
-services
+`services`
+
 ```
 StopSignal User/UID Group/GID WorkingDir Command+Args...
 ```
@@ -26,7 +27,7 @@ If StopSignal is 0, minit will pass on whatever signal it gets to stop (INT, TER
 
 You can use both numeric signals and UIDs/GIDs as well as string representations.
 
-`/minit/onboot` is just any executable script (can work with shebang lines)
+`onboot` is just any executable script (can work with shebang lines)
 
 # Proxmox example
 
@@ -34,8 +35,8 @@ You can use both numeric signals and UIDs/GIDs as well as string representations
 
 ```
 ...
-lxc.init_cmd: /minit/minit
+lxc.init_cmd: /sbin/minit
 ```
 # Docker
 
-https://hub.docker.com/r/doridian/alpine-minit/ is a minimal alpine image with minit (ship your own `/minit/services` and optionally `/minit/onboot`)
+https://hub.docker.com/r/doridian/alpine-minit/ is a minimal alpine image with minit (ship your own `/etc/minit/services` and optionally `/etc/minit/onboot`)

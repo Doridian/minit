@@ -1,4 +1,5 @@
 /minit
-/parser
+/minit_parser
 /services
+/onboot
 

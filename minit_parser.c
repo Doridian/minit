@@ -59,11 +59,11 @@ int getsignum(const char *str, int mode) {
 	close(1);
 	dup2(pipefd[1], 1);
 	if (mode == 0) {
-		execl("/bin/kill", "kill", "-l", NULL);
+		execl(KILL_BINARY, KILL_BINARY, "-l", NULL);
 	} else if (mode == 1) {
 		char *argl = malloc(strlen(str) + 1 + 2);
 		sprintf(argl, "-l%s", str);
-		execl("/bin/kill", "kill", argl, NULL);
+		execl(KILL_BINARY, KILL_BINARY, argl, NULL);
 	}
 	_exit(1);
 }
@@ -87,9 +87,9 @@ int addstring(const char *str) {
 }
 
 int main() {
-	FILE *src = fopen(SERVICES_TEXT, "r");
+	FILE *src = fopen(SERVICES_FILE, "r");
 	if (!src) {
-		fprintf(stderr, "Cannot open " SERVICES_TEXT "\n");
+		fprintf(stderr, "Cannot open " SERVICES_FILE "\n");
 		return 1;
 	}
 
@@ -131,8 +131,8 @@ int main() {
 			} else {
 				upasswd = getpwnam(uid_str);
 				if (!upasswd) {
-					fprintf(stderr, "Don't know user %s, using UID 0\n", uid_str);
-					uid = 0;
+					fprintf(stderr, "Don't know user %s, aborting!\n", uid_str);
+					return 1;
 				} else {
 					uid = upasswd->pw_uid;
 				}
@@ -142,8 +142,8 @@ int main() {
 			} else {
 				gpasswd = getgrnam(gid_str);
 				if (!gpasswd) {
-					fprintf(stderr, "Don't know group %s, using GID 0\n", gid_str);
-					gid = 0;
+					fprintf(stderr, "Don't know group %s, aborting!\n", gid_str);
+					return 1;
 				} else {
 					gid = gpasswd->gr_gid;
 				}
@@ -155,8 +155,8 @@ int main() {
 				if (stop_signal < 0) {
 					stop_signal = getsignum(stop_signal_str, 1);
 					if (stop_signal < 0) {
-						fprintf(stderr, "Don't know how to convert %s to signal, using default\n", stop_signal_str);
-						stop_signal = 0;
+						fprintf(stderr, "Don't know how to convert %s to signal, aborting!\n", stop_signal_str);
+						return 1;
 					}
 				}
 			}
@@ -180,6 +180,7 @@ int main() {
 
 	fclose(src);
 
+	free(subproc_info);
 	free(buffer);
 
 	return 0;

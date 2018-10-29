@@ -8,5 +8,5 @@ compile() {
 }
 
 compile minit
-compile parser
+compile minit_parser
 

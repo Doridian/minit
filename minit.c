@@ -33,7 +33,7 @@ static inline void runproc(const int index, const int slp) {
 		if (slp > 0) {
 			sleep(slp);
 		}
-		execl("/bin/sh", "sh", "-c", info.command, NULL);
+		execl(SH_BINARY, SH_BINARY, "-c", info.command, NULL);
 		_exit(1);
 	} else if (fpid < 0) {
 		shouldRun = 0;
@@ -106,7 +106,7 @@ static inline void load() {
 		close(pipefd[0]);
 		close(1);
 		dup2(pipefd[1], 1);
-		execl("/minit/parser", "parser", NULL);
+		execl(PARSER_BINARY, PARSER_BINARY, NULL);
 		_exit(1);
 	}
 
@@ -139,8 +139,9 @@ static inline void load() {
 
 	printf("Loaded %d services\n", services_count);
 
-	if (system("/minit/onboot")) {
-		printf("onboot failed, ignoring...\n");
+	if (system(ONBOOT_FILE)) {
+		printf(ONBOOT_FILE " failed!\n");
+		exit(6);
 	}
 }
 
@@ -183,7 +184,7 @@ int main() {
 	}
 	
 	if (shouldRun == 2) {
-		execl("/sbin/init", "/sbin/init", NULL);
+		execl(REAL_INIT_BINARY, REAL_INIT_BINARY, NULL);
 	}
 	
 	kill(-getpid(), SIGKILL);
