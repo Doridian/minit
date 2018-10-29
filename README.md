@@ -1,35 +1,32 @@
 # Basics
 
-Minimalistic init system for LXC-like systems.
+Minimalistic init system for container.
 
-Runs process specified in CWD specified with UID and GID specified. Keeps restarting the process once it exits
+Produces a ~10kB main binary using ~4kB of RAM (probably less, but RAM is allocated in 4kB pages so it cannot use less).
 
-Make sure /minit on your LXC is pointing to the folder with the minit binary and other files in this repo in it (readonly mountpoint is fine)
+Runs process specified in CWD specified with UID and GID specified. Keeps restarting the process once it exits.
 
 # Operation
 
-On startup, runs /minit/load, which is expected to create /tmp/minit_services and /tmp/minit_onboot
-
-After that, runs /tmp/minit_onboot (right now used to set up network interfaces and similar)
-
-At last, it runs all services as defined by /tmp/minit_services
-
-Default behaviour of /minit/load is to copy from /minit/hosts/FQDN/services (and optionally onboot, failing back to /minit/onboot if it does not exist)
+On startup, runs `/minit/onboot` (customizable executable, can be a shell script or anything else executable, errors are ignored) and `/minit/parser` (not customizable, comes with minit) which parses `/minit/services` to a binary format.
 
 # Configuration
 
 services
 ```
-STOP_SIGNAL UID GID CWD COMMAND...
+StopSignal User/UID Group/GID WorkingDir Command+Args...
 ```
 example
 ```
 0 0 0 / /usr/sbin/nginx -c /etc/nginx.conf
+INT myservice myservice /home/myservice /home/service/myservice
 ```
 
-load is just any executable script (default uses `#!/bin/sh` scripts)
+If StopSignal is 0, minit will pass on whatever signal it gets to stop (INT, TERM, ...) through to the process. Otherwise it will pass on the signal given in StopSignal.
 
-onboot is just any executable script (default uses `#!/bin/sh` scripts)
+You can use both numeric signals and UIDs/GIDs as well as string representations.
+
+`/minit/onboot` is just any executable script (can work with shebang lines)
 
 # Proxmox example
 
@@ -38,5 +35,7 @@ onboot is just any executable script (default uses `#!/bin/sh` scripts)
 ```
 ...
 lxc.init_cmd: /minit/minit
-mp0: /mnt/minit,mp=/minit,ro=1
 ```
+# Docker
+
+https://hub.docker.com/r/doridian/alpine-minit/ is a minimal alpine image with minit (ship your own `/minit/services` and optionally `/minit/onboot`)
