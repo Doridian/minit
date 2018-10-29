@@ -130,7 +130,7 @@ int main() {
 			} else {
 				stop_signal = getsignum(stop_signal_str);
 				if (stop_signal < 0) {
-					fprintf(stderr, "Don't know how to convert %s to signal, aborting!\n", stop_signal_str);
+					fprintf(stderr, "Don't signal %s, aborting!\n", stop_signal_str);
 					return 1;
 				}
 			}
