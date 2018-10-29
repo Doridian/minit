@@ -135,6 +135,10 @@ int main() {
 				}
 			}
 
+			if (stop_signal == 0) {
+				stop_signal = SIGTERM;
+			}
+
 			subproc_info[services_count].cwd_rel = addstring(cwd);
 			subproc_info[services_count].command_rel = addstring(cmd);
 

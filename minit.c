@@ -44,18 +44,14 @@ static inline void runproc(const int index, const int slp) {
 }
 
 void signalHandler(int signum) {
-	int i, subproc_sig;
+	int i;
 	if (shouldRun == 1) {
 		shouldRun = 0;
 	}
 
 	for (i = 0; i < services_count; i++) {
 		if (subproc_info[i].pid) {
-			subproc_sig = subproc_info[i].stop_signal;
-			if (!subproc_sig) {
-				subproc_sig = SIGTERM;
-			}
-			kill(subproc_info[i].pid, subproc_sig);
+			kill(subproc_info[i].pid, subproc_info[i].stop_signal);
 		}
 	}
 }
