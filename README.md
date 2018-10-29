@@ -1,6 +1,6 @@
 # Basics
 
-Minimalistic init system for container.
+Minimalistic init system for containers.
 
 Produces a ~10kB main binary using ~4kB of RAM (probably less, but RAM is allocated in 4kB pages so it cannot use less).
 
