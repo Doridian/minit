@@ -19,7 +19,7 @@ StopSignal User/UID Group/GID WorkingDir Command+Args...
 example
 ```
 0 0 0 / /usr/sbin/nginx -c /etc/nginx.conf
-INT myservice myservice /home/myservice /home/service/myservice
+INT myservice myservice /home/myservice /home/myservice/bin
 ```
 
 If StopSignal is 0, minit will pass on whatever signal it gets to stop (INT, TERM, ...) through to the process. Otherwise it will pass on the signal given in StopSignal.
