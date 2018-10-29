@@ -8,7 +8,6 @@
 
 #define REAL_INIT_BINARY "/sbin/init"
 #define SH_BINARY "/bin/sh"
-#define KILL_BINARY "/bin/kill"
 
 #include <sys/types.h>
 

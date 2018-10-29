@@ -28,44 +28,21 @@ int isnumber(const char *str, int allowspace) {
 	return 1;
 }
 
-int getsignum(const char *str, int mode) {
-	int pipefd[2];
-	if (pipe(pipefd)) {
-		return -1;
+#define sigcmp(sig) (strcmp(str, # sig) == 0) { return SIG ## sig; }
+
+int getsignum(const char *str) {
+	if (strlen(str) > 3 && str[0] == 'S' && str[1] == 'I' && str[2] == 'G') {
+		str += 3;
 	}
 
-	pid_t pid = vfork();
-	if (pid < 0) {
-		close(pipefd[0]);
-		close(pipefd[1]);
-		return -1;
-	} else if (pid) {
-		close(pipefd[1]);
-		int status;
-		waitpid(pid, &status, 0);
-		char buf[4096];
-		if (read(pipefd[0], buf, 4095) < 1) {
-			return -2;
-		}
-		if (!isnumber(buf, 1)) {
-			return -3;
-		}
-		int ret = atoi(buf);
-		close(pipefd[0]);
-		return ret;
-	}
+	if sigcmp(HUP)
+	else if sigcmp(INT)
+	else if sigcmp(TERM)
+	else if sigcmp(KILL)
+	else if sigcmp(USR1)
+	else if sigcmp(USR2)
 
-	close(pipefd[0]);
-	close(1);
-	dup2(pipefd[1], 1);
-	if (mode == 0) {
-		execl(KILL_BINARY, KILL_BINARY, "-l", NULL);
-	} else if (mode == 1) {
-		char *argl = malloc(strlen(str) + 1 + 2);
-		sprintf(argl, "-l%s", str);
-		execl(KILL_BINARY, KILL_BINARY, argl, NULL);
-	}
-	_exit(1);
+	return -1;
 }
 
 char *buffer;
@@ -151,13 +128,10 @@ int main() {
 			if (isnumber(stop_signal_str, 0)) {
 				stop_signal = atoi(stop_signal_str);
 			} else {
-				stop_signal = getsignum(stop_signal_str, 0);
+				stop_signal = getsignum(stop_signal_str);
 				if (stop_signal < 0) {
-					stop_signal = getsignum(stop_signal_str, 1);
-					if (stop_signal < 0) {
-						fprintf(stderr, "Don't know how to convert %s to signal, aborting!\n", stop_signal_str);
-						return 1;
-					}
+					fprintf(stderr, "Don't know how to convert %s to signal, aborting!\n", stop_signal_str);
+					return 1;
 				}
 			}
 
