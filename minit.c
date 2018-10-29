@@ -49,15 +49,11 @@ void signalHandler(int signum) {
 		shouldRun = 0;
 	}
 
-	if (signum == SIGPWR || signum == SIGUSR1 || signum == SIGUSR2) {
-		signum = SIGTERM;
-	}
-
 	for (i = 0; i < services_count; i++) {
 		if (subproc_info[i].pid) {
 			subproc_sig = subproc_info[i].stop_signal;
 			if (!subproc_sig) {
-				subproc_sig = signum;
+				subproc_sig = SIGTERM;
 			}
 			kill(subproc_info[i].pid, subproc_sig);
 		}
