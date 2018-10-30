@@ -8,7 +8,7 @@ Runs process specified in CWD specified with UID and GID specified. Keeps restar
 
 # Operation
 
-On startup, runs `/etc/minit/onboot` (customizable executable, can be a shell script or anything else executable, errors are ignored) and `/sbin/minit_parser` (not customizable, comes with minit) which parses `/etc/minit/services` to a binary format.
+On startup, runs `/etc/minit/onboot` (customizable executable, can be a shell script or anything else executable) and `/sbin/minit_parser` (not customizable, comes with minit) which parses `/etc/minit/services` to a binary format.
 
 # Configuration
 
